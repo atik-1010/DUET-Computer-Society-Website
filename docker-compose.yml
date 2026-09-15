@@ -1,0 +1,53 @@
+# Run the whole site with one command, without installing PHP or XAMPP:
+#
+#   docker compose up
+#
+# Then open http://localhost:8080/install.php
+#
+# Your project folder is mounted live, so any file you save in VS Code shows up
+# on the next page refresh — no rebuild needed.
+
+services:
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    environment:
+      DUETCS_DB_HOST: db
+      DUETCS_DB_NAME: duetcs
+      DUETCS_DB_USER: root
+      DUETCS_DB_PASS: ""
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # phpMyAdmin, for browsing the database at http://localhost:8081
+  phpmyadmin:
+    image: phpmyadmin:5
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: ""
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mariadb:10.11
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: duetcs
+    volumes:
+      - duetcs-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  duetcs-data:

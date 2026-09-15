@@ -1,0 +1,10 @@
+{
+  // VS Code will offer to install these when the folder is opened.
+  "recommendations": [
+    "bmewburn.vscode-intelephense-client",  // PHP IntelliSense, go-to-definition
+    "ms-azuretools.vscode-docker",          // manage the docker compose stack
+    "ecmel.vscode-html-css"                 // CSS class autocomplete inside PHP
+  ],
+  // Live Server cannot execute PHP — it would serve this project as raw text.
+  "unwantedRecommendations": ["ritwickdey.liveserver"]
+}

@@ -1,0 +1,15 @@
+# Runtime uploads — keep the folders, not their contents
+uploads/*/*
+!uploads/*/.gitkeep
+
+# Local config overrides
+config/config.local.php
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# .vscode/ is intentionally committed — it carries the run tasks and the
+# extension recommendations for this project.
