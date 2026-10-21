@@ -4,13 +4,21 @@
   <div class="container">
     <div class="footer-top">
       <div class="footer-about">
-        <a class="brand" href="<?= url() ?>">
-          <span class="brand-mark"><?= icon('code') ?></span>
-          <span class="brand-text">
-            <span class="brand-name"><?= e(SITE_SHORT) ?></span>
-            <span class="brand-sub">Computer Society</span>
-          </span>
-        </a>
+        
+<a class="brand" href="<?= url() ?>">
+  <span class="brand-mark">
+    <img
+      src="<?= asset('img/logo.png') ?>"
+      alt="DUETCS Logo"
+      class="footer-logo"
+    >
+  </span>
+  <span class="brand-text">
+    <span class="brand-name"><?= e(SITE_SHORT) ?></span>
+    <span class="brand-sub">Computer Society</span>
+  </span>
+</a>
+
         <p><?= e(SITE_DESC) ?></p>
         <div class="social-row">
           <a href="<?= e(setting('facebook_url', '#')) ?>" target="_blank" rel="noopener" aria-label="Facebook"><?= icon('facebook') ?></a>

@@ -23,7 +23,7 @@ $flashes = takeFlash();
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>
-    <?= e($pageTitle === SITE_NAME ? SITE_NAME . ' — ' . SITE_TAGLINE : $pageTitle . ' · ' . SITE_SHORT) ?>
+    <?= e($pageTitle === SITE_NAME ? SITE_NAME . ' - ' . SITE_TAGLINE : $pageTitle . ' · ' . SITE_SHORT) ?>
   </title>
 
   <meta name="description" content="<?= e($pageDesc) ?>">
@@ -168,26 +168,26 @@ $flashes = takeFlash();
 
       <a class="brand" href="<?= url() ?>">
 
-  <span class="brand-mark">
-    <img
-      src="<?= asset('img/logo.png') ?>"
-      alt="DUETCS Logo"
-    >
-  </span>
+        <span class="brand-mark">
+          <img
+            src="<?= asset('img/logo.png') ?>"
+            alt="DUETCS Logo"
+          >
+        </span>
 
-  <span class="brand-text">
+        <span class="brand-text">
 
-    <span class="brand-name">
-      <?= e(SITE_SHORT) ?>
-    </span>
+          <span class="brand-name">
+            <?= e(SITE_SHORT) ?>
+          </span>
 
-    <span class="brand-sub">
-      Computer Society
-    </span>
+          <span class="brand-sub">
+            Computer Society
+          </span>
 
-  </span>
+        </span>
 
-</a>
+      </a>
 
 
       <!-- ========================================================

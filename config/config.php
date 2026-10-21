@@ -18,9 +18,9 @@ define('DB_CHARSET', 'utf8mb4');
 define('SITE_NAME',  'DUET Computer Society');
 define('SITE_SHORT', 'DUETCS');
 define('SITE_TAGLINE', 'Code. Create. Compete.');
-define('SITE_DESC',  'The official computer society of Dhaka University of Engineering & Technology, Gazipur — building programmers, researchers and innovators.');
+define('SITE_DESC',  'The official computer society of Dhaka University of Engineering & Technology, Gazipur - building programmers, researchers and innovators.');
 define('SITE_EMAIL', 'duetcs@duet.ac.bd');
-define('SITE_PHONE', '+880 1700-000000');
+define('SITE_PHONE', '+880 1738-587110');
 define('SITE_ADDRESS', 'Dept. of CSE, DUET, Gazipur-1707, Bangladesh');
 
 // ---------- URLs ----------

@@ -8,7 +8,7 @@
       </span>
     </a>
     <h2>Start where everyone starts.</h2>
-    <p>Create a free account. You can browse everything without one — but membership, certificates and event registration are tied to it.</p>
+    <p>Create a free account. You can browse everything without one - but membership, certificates and event registration are tied to it.</p>
     <ul class="auth-points">
       <li><?= icon('check') ?><span>Free to create, no membership fee required</span></li>
       <li><?= icon('check') ?><span>Apply for membership and pay by bKash, Nagad or Rocket</span></li>

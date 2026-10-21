@@ -49,9 +49,9 @@ $counts['all'] = array_sum($counts);
 
 $labels = [
     'all'      => ['Events',          'Everything DUETCS has run, is running, and is about to run.'],
-    'upcoming' => ['Upcoming Events', 'Register now — these have not happened yet.'],
+    'upcoming' => ['Upcoming Events', 'Register now - these have not happened yet.'],
     'ongoing'  => ['Ongoing Events',  'Running right now. Most are still open to join.'],
-    'past'     => ['Past Events',     'The archive — recordings, results and write-ups.'],
+    'past'     => ['Past Events',     'The archive - recordings, results and write-ups.'],
 ];
 
 page('events', [

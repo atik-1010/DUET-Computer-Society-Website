@@ -46,13 +46,21 @@ $nav['Settings'][] = ['Site Settings', 'settings', 'settings', 0];
 <div class="admin-shell">
 
   <aside class="admin-side" id="admin-side">
-    <a class="brand" href="<?= url() ?>">
-      <span class="brand-mark"><?= icon('code') ?></span>
-      <span class="brand-text">
-        <span class="brand-name"><?= e(SITE_SHORT) ?></span>
-        <span class="brand-sub">Admin panel</span>
-      </span>
-    </a>
+    
+<a class="brand" href="<?= url() ?>">
+  <span class="brand-mark">
+    <img
+      src="<?= asset('img/logo.png') ?>"
+      alt="DUETCS Logo"
+      class="admin-logo"
+    >
+  </span>
+  <span class="brand-text">
+    <span class="brand-name"><?= e(SITE_SHORT) ?></span>
+    <span class="brand-sub">Admin panel</span>
+  </span>
+</a>
+
 
     <nav class="admin-nav" aria-label="Admin sections">
       <?php foreach ($nav as $group => $items): ?>

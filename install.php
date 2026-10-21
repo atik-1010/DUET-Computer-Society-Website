@@ -301,7 +301,7 @@ $defaults = [
         <div class="field">
           <label for="admin_password">Password</label>
           <input class="input" type="password" id="admin_password" name="admin_password" required minlength="8" placeholder="At least 8 characters">
-          <span class="field-hint">Choose something you will remember — there is no password reset by email yet.</span>
+          <span class="field-hint">Choose something you will remember - there is no password reset by email yet.</span>
         </div>
       </div>
 
@@ -310,7 +310,7 @@ $defaults = [
       <label class="check" style="margin-bottom:.8rem">
         <input type="checkbox" name="with_seed" value="1" checked>
         <span>
-          <b>Load the sample content</b> — events, committee, activities, competitions, projects, blog posts,
+          <b>Load the sample content</b> - events, committee, activities, competitions, projects, blog posts,
           gallery, resources, certificates and membership plans. Recommended; you can edit or delete any of it later.
         </span>
       </label>

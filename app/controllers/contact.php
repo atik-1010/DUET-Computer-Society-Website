@@ -60,8 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 page('contact', [
     'title'       => 'Contact Us',
-    'description' => 'Reach the DUETCS executive committee — questions, sponsorship, collaboration or feedback.',
-    'subtitle'    => 'Questions, sponsorship, collaboration or a problem with the site — this reaches the committee.',
+    'description' => 'Reach the DUETCS executive committee - questions, sponsorship, collaboration or feedback.',
+    'subtitle'    => 'Questions, sponsorship, collaboration or a problem with the site - this reaches the committee.',
     'errors'      => $errors,
     'old'         => $old,
 ]);

@@ -9,7 +9,7 @@
       <div>
         <span class="hero-pill">
           <span class="tag">New</span>
-          <b>Fall 2026 CP Bootcamp</b> - registration is open
+          <b>Explore. Learn. Build. Lead.</b>
         </span>
 
         <h1>Where DUET students<br><span class="gradient-text">build, break and win.</span></h1>
@@ -94,7 +94,7 @@
   <div class="container">
     <div class="section-head center reveal">
       <span class="eyebrow">What we do</span>
-      <h2>Six wings. One society.</h2>
+      <h2>Explore. Learn. Build. Lead.</h2>
       <p>Each wing has its own lead on the Executive Committee, its own calendar, and its own way in for beginners.</p>
     </div>
 
@@ -140,7 +140,7 @@
       <div style="max-width:40rem">
         <span class="eyebrow">Compete</span>
         <h2>Contests we host and win</h2>
-        <p>From the campus championship to a 118-team national IUPC.</p>
+        <p>From the campus championship to a 150-team national IUPC.</p>
       </div>
       <a class="btn btn-ghost" href="<?= url('competitions') ?>">All competitions <?= icon('arrow') ?></a>
     </div>
@@ -239,7 +239,7 @@
       <div style="max-width:40rem">
         <span class="eyebrow">From the blog</span>
         <h2>Written by members</h2>
-        <p>Guides, retrospectives and advice — including the parts that did not work.</p>
+        <p>Guides, retrospectives and advice - including the parts that did not work.</p>
       </div>
       <a class="btn btn-ghost" href="<?= url('blog') ?>">All articles <?= icon('arrow') ?></a>
     </div>

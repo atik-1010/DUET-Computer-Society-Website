@@ -50,7 +50,7 @@
     <?= icon('settings') ?>
     <div>
       Database credentials, the site name and the base URL live in
-      <code>config/config.php</code>. Editing that file is a deliberate step — it is not exposed here.
+      <code>config/config.php</code>. Editing that file is a deliberate step - it is not exposed here.
     </div>
   </div>
 
