@@ -28,3 +28,8 @@ Thumbs.db
 # and this repository is public — import them straight into the host instead.
 database/duetcs-live.sql
 database/*-dump.sql
+# Vercel CLI working files. .vercel holds the project link and a short-lived
+# OIDC token; .env.local holds values pulled from the deployment's environment.
+# Neither belongs in the repository.
+.vercel
+.env*
