@@ -80,9 +80,15 @@ In Vercel → your project → **Settings → Environment Variables**, add:
 Redeploy afterwards — environment variables are read at request time, but a
 deployment created before they existed will not pick them up.
 
-To debug a failing deployment, set `DUETCS_DEBUG=1` temporarily. It prints the
-real PDO error instead of "Database unavailable." **Remove it once the site
-works**: it exposes your database host and user to anyone visiting the page.
+To debug a failing deployment, set `DUETCS_DEBUG=1` temporarily. Instead of
+"Database unavailable." the error page then shows the real PDO error plus the
+host, port, database, user and TLS mode the connection was attempted with, and
+whether a password was supplied. If those read `localhost` / `duetcs` / `root`,
+the environment variables never reached the app — check that they are enabled
+for the **Production** environment and that you redeployed after adding them.
+
+**Remove `DUETCS_DEBUG` once the site works**: it exposes your database host
+and user to anyone visiting the page.
 
 ## Step 5 — Verify
 
