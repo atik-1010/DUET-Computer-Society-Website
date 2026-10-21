@@ -37,6 +37,20 @@ function db(): PDO
     } catch (PDOException $e) {
         http_response_code(500);
         $hint = DEBUG ? htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') : 'Database unavailable.';
+
+        // Always report WHICH settings were found, never their values. Variable
+        // names are not secrets, so this is safe on a public error page, and it
+        // answers the one thing the generic message cannot: whether the host's
+        // environment variables reached the app at all, or whether it fell back
+        // to the local defaults and tried to reach a database on itself.
+        $checklist = '';
+        foreach (['DUETCS_DB_HOST', 'DUETCS_DB_PORT', 'DUETCS_DB_NAME',
+                  'DUETCS_DB_USER', 'DUETCS_DB_PASS', 'DUETCS_DB_SSL'] as $__k) {
+            $__set = function_exists('envVar') ? envVar($__k) !== null : getenv($__k) !== false;
+            $checklist .= '<li>' . $__k . ' &mdash; '
+                . ($__set ? 'set' : '<strong style="color:#e11d48">not set</strong>') . '</li>';
+        }
+        $usingDefaults = DB_HOST === 'localhost';
         exit('<div style="font:16px/1.6 system-ui;max-width:640px;margin:80px auto;padding:32px;border:1px solid #e11d48;border-radius:12px">'
            . '<h2 style="margin:0 0 12px">Database connection failed</h2>'
            . '<p style="color:#64748b">' . $hint . '</p>'
@@ -52,7 +66,15 @@ function db(): PDO
                . 'password = ' . (DB_PASS === '' ? '(empty)' : '(set, ' . strlen(DB_PASS) . ' characters)') . '<br>'
                . 'tls = '      . (DB_SSL ? (DB_SSL_CA !== '' ? 'on, verifying CA' : 'on, not verifying') : 'off')
                . '</p>' : '')
-           . (DEBUG ? '<p style="color:#64748b">Start MySQL in XAMPP, then import <code>database/schema.sql</code> via phpMyAdmin.</p>' : '')
+           . '<p style="margin:20px 0 6px;font-weight:600">Configuration found</p>'
+           . '<ul style="font:13px/1.8 ui-monospace,SFMono-Regular,monospace;color:#64748b;margin:0;padding-left:20px">'
+           . $checklist . '</ul>'
+           . ($usingDefaults
+               ? '<p style="color:#e11d48;margin-top:16px">The app is falling back to <code>localhost</code>, '
+                 . 'so no database host reached it. On Vercel, add these as Environment Variables, make sure they are '
+                 . 'enabled for the <strong>Production</strong> environment, then redeploy.</p>'
+               : '')
+           . (DEBUG ? '<p style="color:#64748b">Locally: start MySQL in XAMPP, then import <code>database/schema.sql</code> via phpMyAdmin.</p>' : '')
            . '</div>');
     }
     return $pdo;
