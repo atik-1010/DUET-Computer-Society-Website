@@ -64,12 +64,12 @@ Or import the GitHub repository at [vercel.com/new](https://vercel.com/new).
 Leave the framework preset as **Other** — `vercel.json` does the work. Do not
 set a build command or an output directory.
 
-**The current project has no Git repository connected**, so pushing to GitHub
-does not deploy anything: every release has to go out with `vercel --prod` from
-this folder. Connecting it under Settings → Git would make pushes deploy on
-their own. Note also that Vercel detected the `Dockerfile` and set the preset to
-**Container**, so each deploy also builds a 150MB container image that nothing
-serves; the PHP function is what answers requests.
+The repository is connected, so a push to `main` deploys on its own; `vercel
+--prod` from this folder still works and is the way to release without pushing.
+Note that Vercel detected the `Dockerfile` and set the framework preset to
+**Container**, so every deploy also builds a ~150MB container image that serves
+no traffic — the PHP function answers requests. It costs build time, nothing
+more.
 
 ## Step 4 — Environment variables
 
