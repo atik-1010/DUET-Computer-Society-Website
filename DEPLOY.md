@@ -64,6 +64,13 @@ Or import the GitHub repository at [vercel.com/new](https://vercel.com/new).
 Leave the framework preset as **Other** — `vercel.json` does the work. Do not
 set a build command or an output directory.
 
+**The current project has no Git repository connected**, so pushing to GitHub
+does not deploy anything: every release has to go out with `vercel --prod` from
+this folder. Connecting it under Settings → Git would make pushes deploy on
+their own. Note also that Vercel detected the `Dockerfile` and set the preset to
+**Container**, so each deploy also builds a 150MB container image that nothing
+serves; the PHP function is what answers requests.
+
 ## Step 4 — Environment variables
 
 In Vercel → your project → **Settings → Environment Variables**, add:
@@ -99,6 +106,40 @@ and user to anyone visiting the page.
 - `/install.php` returns 404. It must: that script drops every table and
   creates an admin account, so it is deliberately unreachable through
   `vercel.json`.
+
+## Things that actually went wrong, and why
+
+Worth knowing before changing any of this.
+
+**Managed MySQL runs with `ANSI_QUOTES`.** Under that sql_mode a double-quoted
+token in SQL is an *identifier*, not a string, so `status = "active"` fails with
+"Unknown column 'active'". The local MariaDB does not set it, so queries written
+that way work in development and break on Aiven. Bind values as parameters; the
+project's own rule already says so. To check nothing has crept back in:
+
+```bash
+docker run --rm -v "$PWD:/app:ro" php:8.5-cli php -r 'foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator("/app")) as $f) { if (!$f->isFile() || $f->getExtension()!=="php") continue; foreach (@token_get_all(file_get_contents($f->getPathname())) ?: [] as $t) { if (is_array($t) && $t[0]===T_CONSTANT_ENCAPSED_STRING && preg_match("/\b(SELECT|INSERT INTO|UPDATE|WHERE|JOIN)\b/i",$t[1]) && preg_match_all("/\"[A-Za-z_][A-Za-z0-9_ ]*\"/",$t[1],$m)) foreach($m[0] as $l) printf("%s:%d %s\n",$f->getPathname(),$t[2],$l); } }'
+```
+
+**Vercel runs PHP 8.5, Docker runs 8.2.** Code that is merely deprecated on 8.5
+still *prints* a notice, and output before `session_start()` breaks the session
+cookie and then the page. That is how `PDO::MYSQL_ATTR_SSL_*` took the site down.
+Test against 8.5 before deploying, not just against the container.
+
+**Vercel does not publish this repository as static files.** Requests for
+`/assets/...` reach the function through the catch-all rewrite instead, so
+`api/index.php` serves them from the function bundle. Anything new that has to
+be served as a file must live under `assets/` or `uploads/` and have a media
+type listed there.
+
+**Only the last route in `vercel.json` is honoured here.** Every route before
+the `filesystem` phase was observed to be skipped, so source files are kept
+unreachable by the front controller's own whitelist rather than by those rules.
+Do not rely on a `vercel.json` route to block anything.
+
+**Never silence errors.** `error_reporting(0)` turned a fatal into a blank white
+page with nothing in any log, which is the hardest failure to diagnose on a host
+whose filesystem you cannot open. Display is off in production; logging is not.
 
 ## Known limitation: new uploads
 
