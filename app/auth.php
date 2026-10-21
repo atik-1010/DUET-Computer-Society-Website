@@ -9,10 +9,22 @@ function startSession(): void
     if (session_status() === PHP_SESSION_ACTIVE) {
         return;
     }
+    // On serverless hosting every request may land on a fresh instance with its
+    // own empty filesystem, so PHP's file-based sessions lose the login between
+    // clicks. Keeping them in MySQL gives all instances one shared store.
+    if (SERVERLESS) {
+        require_once __DIR__ . '/session_db.php';
+        session_set_save_handler(new DbSessionHandler(), true);
+        // With an object handler PHP can destroy the handler before the session
+        // is flushed at shutdown, dropping the final write. Closing explicitly
+        // while the object is still alive avoids that.
+        register_shutdown_function('session_write_close');
+    }
+
     session_set_cookie_params([
         'httponly' => true,
         'samesite' => 'Lax',
-        'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'secure'   => IS_HTTPS,
     ]);
     session_name('DUETCSSESS');
     session_start();

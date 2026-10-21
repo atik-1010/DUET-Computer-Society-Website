@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS payments, members, membership_plans, payment_methods,
     committee_members, committees, events, activities, activity_categories,
     competitions, projects, posts, gallery_photos, gallery_albums,
     gallery_videos, resources, resource_categories, certificates, pages,
-    contacts, subscribers, settings, users;
+    contacts, subscribers, settings, sessions, users;
 
 -- ---------------------------------------------------------------- users
 CREATE TABLE users (
@@ -398,6 +398,19 @@ CREATE TABLE settings (
   `key`   VARCHAR(60) NOT NULL,
   `value` TEXT,
   PRIMARY KEY (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------ sessions
+-- Session storage for serverless hosting, where each request gets its own
+-- short-lived filesystem and PHP's default file sessions cannot persist.
+-- Written by DbSessionHandler (app/session_db.php); unused on XAMPP/Docker,
+-- which keep sessions as files.
+CREATE TABLE sessions (
+  id            VARCHAR(128) NOT NULL,
+  payload       MEDIUMTEXT   NOT NULL,
+  last_activity INT UNSIGNED NOT NULL,
+  PRIMARY KEY (id),
+  KEY idx_sessions_activity (last_activity)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

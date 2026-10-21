@@ -1,6 +1,16 @@
-# Runtime uploads — keep the folders, not their contents
-uploads/*/*
-!uploads/*/.gitkeep
+# Runtime uploads.
+#
+# A serverless deployment (Vercel) has a read-only filesystem, so it can never
+# write here: whatever the live site has to show must be committed, because the
+# repository is the only copy that reaches the deployment.
+#
+# Payment proofs and member avatars stay out. Those are personal documents
+# belonging to real people, and this repository is public — they are uploaded
+# through the admin panel on a host that can actually store them.
+uploads/payments/*
+!uploads/payments/.gitkeep
+uploads/members/*
+!uploads/members/.gitkeep
 
 # Local config overrides
 config/config.local.php
@@ -13,3 +23,8 @@ Thumbs.db
 
 # .vscode/ is intentionally committed — it carries the run tasks and the
 # extension recommendations for this project.
+
+# Database dumps. These carry password hashes and members' personal details,
+# and this repository is public — import them straight into the host instead.
+database/duetcs-live.sql
+database/*-dump.sql

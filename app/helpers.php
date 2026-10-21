@@ -228,6 +228,16 @@ function saveUpload(string $field, string $folder, ?string &$error = null): ?str
     if (empty($_FILES[$field]['name']) || $_FILES[$field]['error'] === UPLOAD_ERR_NO_FILE) {
         return null;
     }
+    // A serverless deployment has a read-only filesystem, so there is nowhere to
+    // put the file. Fail with a clear reason rather than letting mkdir() and
+    // move_uploaded_file() emit warnings and look like a generic save error.
+    if (!UPLOADS_WRITABLE) {
+        $error = 'This deployment cannot store new uploads because its filesystem is '
+               . 'read-only. Commit the image to the uploads/ folder in the repository, '
+               . 'or point the site at external file storage.';
+        return null;
+    }
+
     $f = $_FILES[$field];
     if ($f['error'] !== UPLOAD_ERR_OK) {
         $error = 'Upload failed. Please try a smaller file.';
@@ -251,8 +261,9 @@ function saveUpload(string $field, string $folder, ?string &$error = null): ?str
     }
 
     $dir = UPLOAD_DIR . '/' . trim($folder, '/');
-    if (!is_dir($dir)) {
-        mkdir($dir, 0775, true);
+    if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
+        $error = 'Could not create the upload folder on the server.';
+        return null;
     }
     $name = bin2hex(random_bytes(8)) . '-' . time() . '.' . $allowed[$mime];
     if (!move_uploaded_file($f['tmp_name'], $dir . '/' . $name)) {

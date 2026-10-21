@@ -11,20 +11,37 @@ function db(): PDO
         return $pdo;
     }
 
-    $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
+    $dsn = 'mysql:host=' . DB_HOST . ';port=' . DB_PORT
+         . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
+
+    $options = [
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES   => false,
+    ];
+
+    // Managed providers refuse unencrypted connections. With a CA bundle the
+    // server certificate is verified; without one, TLS is still used but the
+    // certificate is not checked — weaker, yet the only option when the host
+    // supplies no CA file, and still far better than a refused connection.
+    if (DB_SSL) {
+        if (DB_SSL_CA !== '') {
+            $options[PDO::MYSQL_ATTR_SSL_CA] = DB_SSL_CA;
+        } else {
+            $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+        }
+    }
+
     try {
-        $pdo = new PDO($dsn, DB_USER, DB_PASS, [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES   => false,
-        ]);
+        $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
     } catch (PDOException $e) {
         http_response_code(500);
         $hint = DEBUG ? htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') : 'Database unavailable.';
         exit('<div style="font:16px/1.6 system-ui;max-width:640px;margin:80px auto;padding:32px;border:1px solid #e11d48;border-radius:12px">'
            . '<h2 style="margin:0 0 12px">Database connection failed</h2>'
            . '<p style="color:#64748b">' . $hint . '</p>'
-           . '<p style="color:#64748b">Start MySQL in XAMPP, then import <code>database/duetcs.sql</code> via phpMyAdmin.</p></div>');
+           . (DEBUG ? '<p style="color:#64748b">Start MySQL in XAMPP, then import <code>database/schema.sql</code> via phpMyAdmin.</p>' : '')
+           . '</div>');
     }
     return $pdo;
 }
