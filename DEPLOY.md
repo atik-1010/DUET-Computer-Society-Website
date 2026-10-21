@@ -149,14 +149,27 @@ to tell where it lives.
 page with nothing in any log, which is the hardest failure to diagnose on a host
 whose filesystem you cannot open. Display is off in production; logging is not.
 
-## Known limitation: new uploads
+## Uploads
 
-A serverless instance cannot write files, so creating an event or committee
-member **with a new image** will report that the filesystem is read-only. The
-rest of the record saves normally.
+A serverless instance cannot write to its own filesystem, so uploaded images go
+to a Vercel Blob store (`duetcs-uploads`, linked to the project) and the
+database keeps the URL that comes back. `BLOB_READ_WRITE_TOKEN` is set on the
+deployment automatically by that link — nothing to configure by hand.
 
-To add images on Vercel, commit them to `uploads/<folder>/` in the repository
-and reference the filename in the admin form. For a fully working admin panel,
-either host the site somewhere with a persistent disk (Railway, Render, Fly.io
-— the existing `Dockerfile` runs as-is), or move uploads to object storage
-such as Vercel Blob, S3 or Cloudinary.
+This needed no change outside `app/blob.php` and two functions in
+`app/helpers.php`, because `upload()` already returned an absolute URL
+untouched: an image column can hold either a bare filename (everything
+committed under `uploads/`) or a Blob URL (anything uploaded since), and views
+treat both the same.
+
+Locally the token is absent, `BLOB_ENABLED` is false, and uploads go to
+`uploads/` exactly as before.
+
+**The store is public.** The URLs carry a random name, so they are not
+guessable, but anyone holding one can open it — the same exposure the images
+have on the site itself. That is fine for committee photos and event banners.
+It is worth a thought for `uploads/payments/`, where membership applicants
+upload a payment screenshot that may show their name, phone number and
+transaction id. If those should not sit in public storage, the options are a
+second store created with `--access private` and served through signed URLs, or
+keeping that one flow on a host with a real disk.
