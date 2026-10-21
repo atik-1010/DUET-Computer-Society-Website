@@ -107,11 +107,12 @@ define('MEMBERSHIP_FEE_LIFETIME', 1500); // BDT
 // to any visitor. Set DUETCS_DEBUG=1 in the host's environment to re-enable.
 $__debug = envVar('DUETCS_DEBUG');
 define('DEBUG', $__debug !== null ? (bool) (int) $__debug : !SERVERLESS);
-if (DEBUG) {
-    ini_set('display_errors', '1');
-    error_reporting(E_ALL);
-} else {
-    ini_set('display_errors', '0');
-    error_reporting(0);
-}
+// Show errors to the visitor only in debug mode -- but never silence them.
+// error_reporting(0) means a fatal renders a blank white page and writes
+// nothing anywhere, which is the hardest possible failure to diagnose on a
+// host whose filesystem you cannot inspect. Logging always stays on, so the
+// host's own log (Vercel's runtime logs) captures what happened.
+ini_set('display_errors', DEBUG ? '1' : '0');
+ini_set('log_errors', '1');
+error_reporting(E_ALL);
 date_default_timezone_set('Asia/Dhaka');
