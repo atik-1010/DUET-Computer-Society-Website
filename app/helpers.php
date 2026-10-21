@@ -228,13 +228,14 @@ function saveUpload(string $field, string $folder, ?string &$error = null): ?str
     if (empty($_FILES[$field]['name']) || $_FILES[$field]['error'] === UPLOAD_ERR_NO_FILE) {
         return null;
     }
-    // A serverless deployment has a read-only filesystem, so there is nowhere to
-    // put the file. Fail with a clear reason rather than letting mkdir() and
+    // A serverless deployment has a read-only filesystem. With a Blob store
+    // linked the file goes there instead (below); without one there is nowhere
+    // to put it, so say so plainly rather than letting mkdir() and
     // move_uploaded_file() emit warnings and look like a generic save error.
-    if (!UPLOADS_WRITABLE) {
-        $error = 'This deployment cannot store new uploads because its filesystem is '
-               . 'read-only. Commit the image to the uploads/ folder in the repository, '
-               . 'or point the site at external file storage.';
+    if (!UPLOADS_WRITABLE && !BLOB_ENABLED) {
+        $error = 'This deployment cannot store new uploads: its filesystem is read-only '
+               . 'and no file storage is configured. Commit the image to the uploads/ '
+               . 'folder in the repository, or link a Vercel Blob store to the project.';
         return null;
     }
 
@@ -260,12 +261,22 @@ function saveUpload(string $field, string $folder, ?string &$error = null): ?str
         return null;
     }
 
+    $name = bin2hex(random_bytes(8)) . '-' . time() . '.' . $allowed[$mime];
+
+    // Where the filesystem cannot be written, the bytes go to Blob storage and
+    // what is returned — and therefore stored in the database — is a URL.
+    // upload() passes an absolute URL straight through, so nothing downstream
+    // has to know which of the two a given record uses.
+    if (!UPLOADS_WRITABLE) {
+        require_once BASE_PATH . '/app/blob.php';
+        return blobPut(trim($folder, '/') . '/' . $name, $f['tmp_name'], $mime, $error);
+    }
+
     $dir = UPLOAD_DIR . '/' . trim($folder, '/');
     if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
         $error = 'Could not create the upload folder on the server.';
         return null;
     }
-    $name = bin2hex(random_bytes(8)) . '-' . time() . '.' . $allowed[$mime];
     if (!move_uploaded_file($f['tmp_name'], $dir . '/' . $name)) {
         $error = 'Could not save the file on the server.';
         return null;
@@ -277,6 +288,14 @@ function saveUpload(string $field, string $folder, ?string &$error = null): ?str
 function deleteUpload(?string $file, string $folder): void
 {
     if (!$file) return;
+
+    // A stored value that is a URL lives in Blob storage, not on this disk.
+    if (preg_match('#^https?://#i', $file)) {
+        require_once BASE_PATH . '/app/blob.php';
+        blobDelete($file);
+        return;
+    }
+
     $path = UPLOAD_DIR . '/' . trim($folder, '/') . '/' . basename($file);
     if (is_file($path)) {
         @unlink($path);

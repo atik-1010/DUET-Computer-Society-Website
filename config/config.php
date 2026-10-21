@@ -93,9 +93,16 @@ define('PRETTY_URLS', SERVERLESS);
 define('UPLOAD_DIR', BASE_PATH . '/uploads');
 define('UPLOAD_URL', BASE_URL . '/uploads');
 define('MAX_UPLOAD', 3 * 1024 * 1024); // 3 MB
-// Serverless instances have a read-only filesystem, so new uploads cannot be
-// stored. Files already committed to uploads/ are still served normally.
+// Serverless instances have a read-only filesystem, so uploads cannot be saved
+// to uploads/ there. Files already committed to uploads/ are still served.
 define('UPLOADS_WRITABLE', !SERVERLESS);
+
+// Vercel Blob. BLOB_READ_WRITE_TOKEN is set on the deployment automatically
+// once a Blob store is linked to the project; with it, uploads work on the
+// read-only filesystem by going to the store and keeping the returned URL in
+// the database. Locally the token is absent and uploads/ is used as before.
+define('BLOB_TOKEN', (string) (envVar('BLOB_READ_WRITE_TOKEN') ?: ''));
+define('BLOB_ENABLED', BLOB_TOKEN !== '');
 
 // ---------- Membership ----------
 define('MEMBERSHIP_FEE', 300);           // BDT per year
