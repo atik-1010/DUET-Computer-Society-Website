@@ -4,12 +4,37 @@
  * Global configuration
  */
 
+// ---------- Environment ----------
+/**
+ * Read a deployment environment variable.
+ *
+ * getenv() on its own is not dependable across hosts: whether a variable lands
+ * in the process environment, in $_SERVER or in $_ENV depends on the SAPI and
+ * on the variables_order ini setting, and a serverless runtime that starts PHP
+ * behind its own wrapper may forward the deployment's variables through only
+ * one of the three. Checking all of them is what lets one config file work on
+ * XAMPP, in Docker and on Vercel without edits.
+ *
+ * A variable that is set but empty wins over the default, so an intentionally
+ * blank password (the XAMPP root default) still behaves as a blank password.
+ */
+if (!function_exists('envVar')) {
+    function envVar(string $key, ?string $default = null): ?string
+    {
+        $found = getenv($key);
+        if ($found === false) {
+            $found = $_SERVER[$key] ?? $_ENV[$key] ?? false;
+        }
+        return $found === false ? $default : (string) $found;
+    }
+}
+
 // ---------- Runtime environment ----------
 // Vercel, like any serverless host, gives each request a fresh instance with a
 // read-only filesystem. Three things have to behave differently there: the
 // entrypoint lives in /api instead of the web root, sessions cannot be files,
 // and uploads cannot be written at all.
-define('SERVERLESS', getenv('VERCEL') !== false || getenv('AWS_LAMBDA_FUNCTION_NAME') !== false);
+define('SERVERLESS', envVar('VERCEL') !== null || envVar('VERCEL_ENV') !== null || envVar('AWS_LAMBDA_FUNCTION_NAME') !== null);
 
 // Vercel terminates TLS at its edge and forwards the request over http, so
 // $_SERVER['HTTPS'] is empty even though the visitor is on https. Trusting the
@@ -23,18 +48,18 @@ define('IS_HTTPS', (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
 // Values default to a standard XAMPP setup. They can be overridden with
 // environment variables, which is how docker-compose.yml points the app at
 // its own MySQL container without editing this file.
-define('DB_HOST', getenv('DUETCS_DB_HOST') ?: 'localhost');
-define('DB_NAME', getenv('DUETCS_DB_NAME') ?: 'duetcs');
-define('DB_USER', getenv('DUETCS_DB_USER') ?: 'root');
-define('DB_PASS', getenv('DUETCS_DB_PASS') !== false ? getenv('DUETCS_DB_PASS') : '');
+define('DB_HOST', envVar('DUETCS_DB_HOST') ?: 'localhost');
+define('DB_NAME', envVar('DUETCS_DB_NAME') ?: 'duetcs');
+define('DB_USER', envVar('DUETCS_DB_USER') ?: 'root');
+define('DB_PASS', envVar('DUETCS_DB_PASS', ''));
 define('DB_CHARSET', 'utf8mb4');
 // Managed MySQL providers (Aiven, TiDB Cloud, Railway, Clever Cloud) hand out a
 // non-standard port and require an encrypted connection, so both have to be
 // configurable. DUETCS_DB_SSL=1 turns TLS on without shipping a CA bundle;
 // set DUETCS_DB_SSL_CA to a .pem path instead to verify the server certificate.
-define('DB_PORT', (int) (getenv('DUETCS_DB_PORT') ?: 3306));
-define('DB_SSL_CA', (string) (getenv('DUETCS_DB_SSL_CA') ?: ''));
-define('DB_SSL', DB_SSL_CA !== '' || (bool) (int) (getenv('DUETCS_DB_SSL') ?: 0));
+define('DB_PORT', (int) (envVar('DUETCS_DB_PORT') ?: 3306));
+define('DB_SSL_CA', (string) (envVar('DUETCS_DB_SSL_CA') ?: ''));
+define('DB_SSL', DB_SSL_CA !== '' || (bool) (int) (envVar('DUETCS_DB_SSL') ?: 0));
 
 // ---------- Site identity ----------
 define('SITE_NAME',  'DUET Computer Society');
@@ -80,8 +105,8 @@ define('MEMBERSHIP_FEE_LIFETIME', 1500); // BDT
 // Never show errors on a public deployment: config/database.php prints the
 // raw PDO message on failure, which would publish the database host and user
 // to any visitor. Set DUETCS_DEBUG=1 in the host's environment to re-enable.
-$__debug = getenv('DUETCS_DEBUG');
-define('DEBUG', $__debug !== false ? (bool) (int) $__debug : !SERVERLESS);
+$__debug = envVar('DUETCS_DEBUG');
+define('DEBUG', $__debug !== null ? (bool) (int) $__debug : !SERVERLESS);
 if (DEBUG) {
     ini_set('display_errors', '1');
     error_reporting(E_ALL);

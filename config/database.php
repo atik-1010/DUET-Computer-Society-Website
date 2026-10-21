@@ -40,6 +40,18 @@ function db(): PDO
         exit('<div style="font:16px/1.6 system-ui;max-width:640px;margin:80px auto;padding:32px;border:1px solid #e11d48;border-radius:12px">'
            . '<h2 style="margin:0 0 12px">Database connection failed</h2>'
            . '<p style="color:#64748b">' . $hint . '</p>'
+           // Under DEBUG, show what the connection was actually attempted with.
+           // This answers the first question in any failure -- whether the host's
+           // environment variables reached the app at all, or whether it quietly
+           // fell back to the local defaults. The password is never printed.
+           . (DEBUG ? '<p style="font:13px/1.7 ui-monospace,SFMono-Regular,monospace;color:#64748b;background:#f8fafc;padding:12px;border-radius:8px">'
+               . 'host = '     . htmlspecialchars(DB_HOST, ENT_QUOTES, 'UTF-8') . '<br>'
+               . 'port = '     . DB_PORT . '<br>'
+               . 'database = ' . htmlspecialchars(DB_NAME, ENT_QUOTES, 'UTF-8') . '<br>'
+               . 'user = '     . htmlspecialchars(DB_USER, ENT_QUOTES, 'UTF-8') . '<br>'
+               . 'password = ' . (DB_PASS === '' ? '(empty)' : '(set, ' . strlen(DB_PASS) . ' characters)') . '<br>'
+               . 'tls = '      . (DB_SSL ? (DB_SSL_CA !== '' ? 'on, verifying CA' : 'on, not verifying') : 'off')
+               . '</p>' : '')
            . (DEBUG ? '<p style="color:#64748b">Start MySQL in XAMPP, then import <code>database/schema.sql</code> via phpMyAdmin.</p>' : '')
            . '</div>');
     }
