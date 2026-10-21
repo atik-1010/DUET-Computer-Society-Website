@@ -137,6 +137,14 @@ the `filesystem` phase was observed to be skipped, so source files are kept
 unreachable by the front controller's own whitelist rather than by those rules.
 Do not rely on a `vercel.json` route to block anything.
 
+**Keep the function in the database's region.** `vercel.json` pins it to
+`sin1`, because the Aiven service resolves to a Singapore address. It defaulted
+to `iad1` (Washington DC), and with the home page issuing about a dozen queries,
+each paying a round trip across the planet, a page took six seconds; from `sin1`
+it takes about four hundred milliseconds. If the database is ever moved, move
+this with it — `dig +short <aiven-host>` and geolocating the address is enough
+to tell where it lives.
+
 **Never silence errors.** `error_reporting(0)` turned a fatal into a blank white
 page with nothing in any log, which is the hardest failure to diagnose on a host
 whose filesystem you cannot open. Display is off in production; logging is not.
