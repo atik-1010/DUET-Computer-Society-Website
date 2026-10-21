@@ -13,10 +13,6 @@
       "dest": "/assets/img/favicon2.svg"
     },
     {
-      "src": "/_diag/?",
-      "dest": "/api/diag.php"
-    },
-    {
       "src": "/index\\.php",
       "dest": "/api/index.php"
     },

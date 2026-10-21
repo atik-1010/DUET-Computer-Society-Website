@@ -63,16 +63,6 @@ function serveProjectAsset(string $rel): void
 
 $requested = (string) ($_GET['p'] ?? '');
 
-// Temporary deployment diagnostic, reachable at /_diag.
-//
-// It hangs off the front controller's own ?p= value rather than a vercel.json
-// route of its own: the platform skips the routes listed before its filesystem
-// phase, so only the catch-all rewrite can be relied on.
-if ($requested === '_diag') {
-    require __DIR__ . '/diag.php';
-    exit;
-}
-
 if (preg_match('#^(?:assets|uploads)/#', $requested)) {
     serveProjectAsset($requested);   // serves the file, or 404s; never returns
 }
