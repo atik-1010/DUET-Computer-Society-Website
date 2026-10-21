@@ -46,7 +46,10 @@ function currentUser(): ?array
 
     $id = $_SESSION['user_id'] ?? null;
     if ($id) {
-        $row = fetchOne('SELECT * FROM users WHERE id = ? AND status = "active"', [$id]);
+        // 'active' is bound, not quoted inline: a double-quoted literal is read
+        // as an identifier under the ANSI_QUOTES sql_mode that some managed
+        // MySQL hosts enable, which turns this into "unknown column 'active'".
+        $row = fetchOne('SELECT * FROM users WHERE id = ? AND status = ?', [$id, 'active']);
         if ($row) {
             $GLOBALS['__auth_user'] = $row;
         } else {

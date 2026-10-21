@@ -96,7 +96,9 @@ printf("  tls             : %s\n", DB_SSL ? 'on' : 'off');
 try {
     $opts = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_TIMEOUT => 10];
     if (DB_SSL) {
-        $opts[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+        $opts[class_exists('Pdo\Mysql')
+            ? \Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT
+            : PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
     }
     $t0  = microtime(true);
     $pdo = new PDO('mysql:host=' . DB_HOST . ';port=' . DB_PORT

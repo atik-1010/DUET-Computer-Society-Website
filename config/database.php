@@ -25,10 +25,21 @@ function db(): PDO
     // certificate is not checked — weaker, yet the only option when the host
     // supplies no CA file, and still far better than a refused connection.
     if (DB_SSL) {
+        // PHP 8.5 moved the MySQL driver attributes onto Pdo\Mysql and deprecated
+        // the PDO::MYSQL_* spellings. The deprecation notice is *printed*, and
+        // output here arrives before session_start() sends its cookie, which
+        // breaks the session and then the page -- so the notice has to be
+        // avoided, not merely tolerated. The numeric values differ between
+        // versions too, so the constants must be read rather than hard-coded.
+        $modern     = class_exists('Pdo\Mysql');
+        $attrCa     = $modern ? \Pdo\Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA;
+        $attrVerify = $modern ? \Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT
+                              : PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT;
+
         if (DB_SSL_CA !== '') {
-            $options[PDO::MYSQL_ATTR_SSL_CA] = DB_SSL_CA;
+            $options[$attrCa] = DB_SSL_CA;
         } else {
-            $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+            $options[$attrVerify] = false;
         }
     }
 

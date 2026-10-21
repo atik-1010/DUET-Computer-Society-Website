@@ -142,10 +142,10 @@ if ($step === 'install' && $ready) {
             // 4. accounts, hashed by PHP
             $ins = $pdo->prepare(
                 'INSERT INTO users (name, username, email, password, role, status)
-                 VALUES (?, ?, ?, ?, ?, "active")
+                 VALUES (?, ?, ?, ?, ?, ?)
                  ON DUPLICATE KEY UPDATE password = VALUES(password), role = VALUES(role), name = VALUES(name)'
             );
-            $ins->execute([$adminName, $adminUser, $adminEmail, password_hash($adminPass, PASSWORD_DEFAULT), 'admin']);
+            $ins->execute([$adminName, $adminUser, $adminEmail, password_hash($adminPass, PASSWORD_DEFAULT), 'admin', 'active']);
             $log[] = 'Administrator account created: ' . htmlspecialchars($adminUser);
 
             if ($withDemo) {

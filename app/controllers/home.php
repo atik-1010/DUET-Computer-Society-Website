@@ -20,8 +20,9 @@ page('home', [
     'committee'   => fetchAll(
         'SELECT cm.* FROM committee_members cm
          JOIN committees c ON c.id = cm.committee_id
-         WHERE c.is_current = 1 AND c.type = "executive"
-         ORDER BY cm.sort_order LIMIT 4'
+         WHERE c.is_current = 1 AND c.type = ?
+         ORDER BY cm.sort_order LIMIT 4',
+        ['executive']
     ),
     'plans'       => fetchAll('SELECT * FROM membership_plans WHERE is_active = 1 ORDER BY sort_order'),
 ]);
