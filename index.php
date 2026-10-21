@@ -19,7 +19,17 @@ startSession();
 
 // ---- Parse the route ----------------------------------------------------
 $raw   = (string) ($_GET['p'] ?? '');
-$raw   = preg_replace('#[^A-Za-z0-9/_\-]#', '', $raw);   // drop anything unexpected
+
+// A traversal attempt is refused outright rather than rewritten: stripping
+// ".." from "...." would just produce ".." again.
+if (str_contains($raw, '..')) {
+    notFound();
+}
+// Dots are kept so that /media/<folder>/<file>.<ext> can carry a real
+// filename. Nothing else needs them: the first segment is matched against the
+// whitelist below, and the remaining segments reach controllers that either
+// bind them into a query or validate their shape themselves.
+$raw   = preg_replace('#[^A-Za-z0-9/_.\-]#', '', $raw);   // drop anything unexpected
 $route = trim($raw, '/');
 $GLOBALS['ROUTE'] = $route;
 
@@ -57,6 +67,7 @@ $routes = [
     'dashboard'    => 'account',
     'profile'      => 'account',
     'admin'        => 'admin',
+    'media'        => 'media',       // files held in private Blob storage
 ];
 
 if (!isset($routes[$controller])) {

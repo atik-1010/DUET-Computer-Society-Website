@@ -104,6 +104,16 @@ define('UPLOADS_WRITABLE', !SERVERLESS);
 define('BLOB_TOKEN', (string) (envVar('BLOB_READ_WRITE_TOKEN') ?: ''));
 define('BLOB_ENABLED', BLOB_TOKEN !== '');
 
+// How a stored value says "this lives in the Blob store" rather than being a
+// filename committed under uploads/. upload() turns it into a /media/ link.
+define('BLOB_MARKER', 'blob:');
+
+// Folders holding other people's personal documents. The media route serves
+// these only to an administrator, or to the member the file belongs to --
+// everything else there is site artwork and is open to all, exactly as it is
+// on the pages that display it.
+define('BLOB_PRIVATE_FOLDERS', ['payments', 'members']);
+
 // ---------- Membership ----------
 define('MEMBERSHIP_FEE', 300);           // BDT per year
 define('MEMBERSHIP_FEE_LIFETIME', 1500); // BDT

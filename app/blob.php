@@ -1,23 +1,44 @@
 <?php
 /**
- * Vercel Blob file storage.
+ * Vercel Blob file storage (private store).
  *
- * A serverless instance cannot write to its own filesystem, so uploaded images
- * are stored here instead and the database keeps the URL that comes back.
- * upload() in helpers.php already returns an absolute URL untouched, so views
- * and templates need no change — a record's image column simply holds a URL
- * rather than a bare filename.
+ * A serverless instance cannot write to its own filesystem, so uploaded files
+ * are stored here. The store is configured with private access: its URLs
+ * answer 403 to anyone without the project's token, so the bytes are only
+ * reachable through this application, which decides who may see them —
+ * authorisation, rather than an unguessable URL.
+ *
+ * What goes in the database is the key inside the store, marked with a
+ * "blob:" prefix so it cannot be confused with a filename committed under
+ * uploads/. upload() turns that into a /media/... link, which media.php
+ * serves after checking the viewer is allowed to see it.
  *
  * This speaks the same REST contract as the official @vercel/blob client
  * (API version 13). BLOB_READ_WRITE_TOKEN is set on the deployment
- * automatically once a Blob store is linked to the project; when it is absent
- * — on XAMPP or in Docker — nothing here is used and uploads go to uploads/.
+ * automatically by linking the store to the project; without it nothing here
+ * is used and uploads go to uploads/ as they do on XAMPP and in Docker.
  */
 
 const BLOB_API_BASE    = 'https://vercel.com/api/blob';
 const BLOB_API_VERSION = '13';
+/**
+ * The store's own hostname, derived from the token.
+ *
+ * The token reads vercel_blob_rw_<storeId>_<secret>, and a private store
+ * answers at <storeid>.private.blob.vercel-storage.com. Deriving it means the
+ * host never has to be configured separately, and a store swap needs no code
+ * change — relinking the store is enough.
+ */
+function blobHost(): ?string
+{
+    $parts = explode('_', BLOB_TOKEN);
+    if (count($parts) < 5 || $parts[0] !== 'vercel' || $parts[1] !== 'blob') {
+        return null;
+    }
+    return strtolower($parts[3]) . '.private.blob.vercel-storage.com';
+}
 
-/** Shared request plumbing. Returns [httpCode, decodedBody, transportError]. */
+/** Shared request plumbing. Returns [httpCode, decodedJson, transportError]. */
 function blobRequest(string $url, string $method, array $headers, ?string $body): array
 {
     $ch = curl_init($url);
@@ -47,9 +68,8 @@ function blobRequest(string $url, string $method, array $headers, ?string $body)
 }
 
 /**
- * Store a file and return its public URL, or null with $error set.
- *
- * $pathname is the key inside the store, e.g. "committee/ab12cd34-1792.jpg".
+ * Store a file and return the database value for it ("blob:folder/name"),
+ * or null with $error set.
  */
 function blobPut(string $pathname, string $sourceFile, string $mime, ?string &$error = null): ?string
 {
@@ -64,18 +84,19 @@ function blobPut(string $pathname, string $sourceFile, string $mime, ?string &$e
         return null;
     }
 
+    $pathname = ltrim($pathname, '/');
+
     // The key goes in the query string, not the path: the API expects
     // PUT /?pathname=<urlencoded>, which is what the official client sends.
     [$code, $json, $transportError] = blobRequest(
-        BLOB_API_BASE . '/?' . http_build_query(['pathname' => ltrim($pathname, '/')]),
+        BLOB_API_BASE . '/?' . http_build_query(['pathname' => $pathname]),
         'PUT',
         [
-            'x-vercel-blob-access: public',
+            'x-vercel-blob-access: private',
             'x-content-type: ' . $mime,
             // saveUpload() already gives every file a random name, so the
             // pathname stands as written instead of gaining a second suffix.
             'x-add-random-suffix: 0',
-            'x-cache-control-max-age: 31536000',
             'content-length: ' . strlen($bytes),
         ],
         $bytes
@@ -89,15 +110,60 @@ function blobPut(string $pathname, string $sourceFile, string $mime, ?string &$e
         $error = 'The file store rejected the upload (' . blobErrorText($json, $code) . ').';
         return null;
     }
-    return (string) $json['url'];
+    return BLOB_MARKER . $pathname;
 }
 
-/** Remove a stored file by its URL. Failure is not worth interrupting a save. */
-function blobDelete(string $url): bool
+/**
+ * Send a stored file to the browser and stop. The caller is responsible for
+ * deciding that this viewer is allowed to see it.
+ */
+function blobStream(string $pathname, bool $public): void
 {
-    if (BLOB_TOKEN === '') {
+    $host = blobHost();
+    if ($host === null) {
+        http_response_code(500);
+        exit;
+    }
+
+    $url = 'https://' . $host . '/' . implode('/', array_map('rawurlencode', explode('/', ltrim($pathname, '/'))));
+
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 25,
+        CURLOPT_HTTPHEADER     => ['authorization: Bearer ' . BLOB_TOKEN],
+    ]);
+    $body  = curl_exec($ch);
+    $code  = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    $ctype = (string) curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+
+    if ($body === false || $code < 200 || $code >= 300) {
+        http_response_code($code === 404 ? 404 : 502);
+        exit;
+    }
+
+    header('Content-Type: ' . ($ctype !== '' ? $ctype : 'application/octet-stream'));
+    header('Content-Length: ' . strlen((string) $body));
+    if ($public) {
+        // Site artwork never changes once written, so let the CDN keep it and
+        // stop waking this function for every view.
+        header('Cache-Control: public, max-age=31536000, immutable');
+    } else {
+        // Someone else's personal document: no shared cache, ever.
+        header('Cache-Control: private, no-store');
+    }
+    echo $body;
+    exit;
+}
+
+/** Remove a stored file. Failure is not worth interrupting a save. */
+function blobDelete(string $pathname): bool
+{
+    $host = blobHost();
+    if (BLOB_TOKEN === '' || $host === null) {
         return false;
     }
+    $url = 'https://' . $host . '/' . ltrim($pathname, '/');
     [$code] = blobRequest(
         BLOB_API_BASE . '/delete',
         'POST',

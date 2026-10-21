@@ -42,6 +42,11 @@ function upload(?string $file, string $folder = ''): string
     if (preg_match('#^https?://#i', $file)) {
         return $file;
     }
+    // Held in Blob storage: served through the media route, which checks the
+    // viewer is allowed to see it before fetching any bytes.
+    if (str_starts_with($file, BLOB_MARKER)) {
+        return url('media/' . substr($file, strlen(BLOB_MARKER)));
+    }
     if (str_starts_with($file, 'assets/')) {
         return BASE_URL . '/' . $file;
     }
@@ -289,10 +294,10 @@ function deleteUpload(?string $file, string $folder): void
 {
     if (!$file) return;
 
-    // A stored value that is a URL lives in Blob storage, not on this disk.
-    if (preg_match('#^https?://#i', $file)) {
+    // A marked value lives in Blob storage, not on this disk.
+    if (str_starts_with($file, BLOB_MARKER)) {
         require_once BASE_PATH . '/app/blob.php';
-        blobDelete($file);
+        blobDelete(substr($file, strlen(BLOB_MARKER)));
         return;
     }
 
